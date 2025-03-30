@@ -6,95 +6,140 @@ pygame.init()
 
 # window size
 WIDTH, HEIGHT = 800, 400
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Jump & Run - Prototype")
+FPS = 30
 
 # colors
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 GROUND_COLOR = (100, 50, 0)
 
-# player parameters
-player_size = 50
-player_x = 100
-player_y = HEIGHT - player_size - 20
-player_velocity_y = 0
-gravity = 0.8
-jump_strength = -12
-is_jumping = False
+#screen = pygame.display.set_mode((WIDTH, HEIGHT))
+#pygame.display.set_caption("Jump & Run - Prototype")
 
-# obstacle parameters
-obstacle_width = 30
-#obstacle_height = 50
-obstacle_x = WIDTH
-#obstacle_y = HEIGHT - obstacle_height - 20
-obstacle_speed = 5
-obstacle_types = [
-    {"height": 30, "requires_double_jump": False}, # small obstacle
-    {"height": 60, "requires_double_jump": True}, # big obstacle
-]
+class Player:
+    def __init__(self):
+        self.width = 50
+        self.height = 50
+        self.x = 100
+        self.y = HEIGHT - self.height - 20
+        self.velocity_y = 0
+        self.gravity = 0.8
+        self.jump_strength = -12
+        self.is_jumping = 0
 
-# game variables
-running = True
-start_time = time.time()
-clock = pygame.time.Clock()
-speed_increase_interval = 5 # increase every 5 seconds
+    def jump(self):
+        """player is jumping"""
+        if self.is_jumping < 2:
+            self.velocity_y = self.jump_strength
+            self.is_jumping += 1
 
-# generate first obstacle
-current_obstacle = random.choice(obstacle_types)
-obstacle_y = HEIGHT - current_obstacle["height"] - 20
+    def apply_gravity(self):
+        """applies gravity"""
+        self.velocity_y += self.gravity
+        self.y += self.velocity_y
 
-while running:
-    clock.tick(30)                          # 30 FPS
-    screen.fill(WHITE)                      # background color\
+        # collision with ground
+        if self.y >= HEIGHT - self.height - 20:
+            self.y = HEIGHT - self.height - 20
+            self.velocity_y = 0
+            self.is_jumping = 0
 
-    # check events
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                if not is_jumping: # single jump
-                    player_velocity_y = jump_strength
-                    is_jumping = True
-                elif current_obstacle["requires_double_jump"]:
-                    player_velocity_y = jump_strength
+    def draw(self, screen):
+        """draws player"""
+        pygame.draw.rect(screen, BLACK, [self.x, self.y, self.width, self.height])
 
-    # apply gravity
-    player_velocity_y += gravity
-    player_y += player_velocity_y
 
-    # collision with ground
-    if player_y >= HEIGHT - player_size - 20:
-        player_y = HEIGHT - player_size - 20
-        is_jumping = False
+class Obstacle:
+    def __init__(self, speed):
+        self.width = 30
+        self.type = random.choice([
+            {"height": 30},  # small obstacle
+            {"height": 60},  # big obstacle
+        ])
+        self.height = self.type["height"]
+        self.x = WIDTH
+        self.y = HEIGHT - self.height - 20
+        self.speed = speed
 
-    # move obstacles
-    obstacle_x -= obstacle_speed
-    if obstacle_x < -obstacle_width:
-        obstacle_x = WIDTH
-        current_obstacle = random.choice(obstacle_types)
-        obstacle_y = HEIGHT - current_obstacle["height"] - 20
+    def move(self):
+        """moves obstacle to the left"""
+        self.x -= self.speed
+        if self.x < -self.width:
+            return True
+        return False
 
-    # detect collision
-    if player_x < obstacle_x + obstacle_width and player_x + player_size > obstacle_x:
-        if player_y + player_size > obstacle_y:
-            elapsed_time = round(time.time() - start_time, 2)
-            print("Game Over! Time survived: " + str(elapsed_time))
-            running = False
+    def draw(self, screen):
+        """draws obstacle"""
+        pygame.draw.rect(screen, BLACK, [self.x, self.y, self.width, self.height])
 
-    # print
-    pygame.draw.rect(screen, BLACK, [player_x, player_y, player_size, player_size])  # player
-    pygame.draw.rect(screen, BLACK, [obstacle_x, obstacle_y, obstacle_width, current_obstacle["height"]])  # obstacle
-    pygame.draw.rect(screen, GROUND_COLOR, (0, HEIGHT - 20, WIDTH, 20))  # ground
 
-    # show time survived
-    elapsed_time = round(time.time() - start_time, 2)
-    font = pygame.font.SysFont(None, 36)
-    text = font.render(f"Time: {elapsed_time}", True, BLACK)
-    screen.blit(text, (10, 10))
+class Game:
+    def __init__(self):
+        self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
+        pygame.display.set_caption("Jump and Run AI Level Gen")
+        self.clock = pygame.time.Clock()
+        self.running = True
 
-    pygame.display.update()
+        # Game objects
+        self.player = Player()
+        self.obstacle = Obstacle(speed = 5)
+        self.start_time = time.time()
+        self.speed_increase_interval = 5 # increase every 5 seconds
 
-pygame.quit()
+    def check_collision(self):
+        """checks whether player collides with an obstacle"""
+        if self.player.x < self.obstacle.x + self.obstacle.width and self.player.x + self.player.width > self.obstacle.x:
+            if self.player.y + self.player.height > self.obstacle.y:
+                return True
+        return False
 
+    def run(self):
+        """runs the game"""
+        while self.running:
+            self.clock.tick(FPS)
+            self.screen.fill(WHITE)
+
+            # event handling
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    self.running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_SPACE:
+                        self.player.jump()
+
+            # game logic
+            self.player.apply_gravity()
+            if self.obstacle.move(): # in case the obstacle moves out of the window
+                self.obstacle = Obstacle(speed=self.obstacle.speed)
+
+            # increase the speed
+            if time.time() - self.start_time > self.speed_increase_interval:
+                self.obstacle.speed += 0.5
+                self.speed_increase_interval += 5
+
+            # collision detection
+            if self.check_collision():
+                elapsed_time = round(time.time() - self.start_time, 2)
+                print("Game Over! Time survived: " + str(elapsed_time))
+                self.running = False
+
+            # draw
+            self.player.draw(self.screen)
+            self.obstacle.draw(self.screen)
+            pygame.draw.rect(self.screen, GROUND_COLOR, (0, HEIGHT - 20, WIDTH, 20))  # ground
+
+            # show time survived
+            elapsed_time = round(time.time() - self.start_time, 2)
+            font = pygame.font.SysFont(None, 36)
+            text = font.render(f"Time: {elapsed_time}", True, BLACK)
+            self.screen.blit(text, (10, 10))
+
+            pygame.display.update()
+
+        pygame.quit()
+
+
+# start game
+if __name__ == "__main__":
+    game = Game()
+    game.run()
