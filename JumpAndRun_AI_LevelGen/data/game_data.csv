@@ -1,0 +1,12 @@
+9.94,5.5,0.5,0,"{'low_block': [0], 'high_block': [0]}","{'single_jump': [0], 'double_jump': [0]}",high_block
+4.81,5,0.5,0,"{'low_block': [0], 'high_block': [0]}","{'single_jump': [0], 'double_jump': [0]}",low_block
+26.62,7.5,0.5,5,"[{'name': 'low_block', 'count': 3}, {'name': 'high_block', 'count': 2}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",low_block
+14.2,6.0,0.5,2,"[{'name': 'low_block', 'count': 2}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
+33.67,8.0,0.5,7,"[{'name': 'low_block', 'count': 4}, {'name': 'high_block', 'count': 3}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
+14.13,6.0,0.5,2,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 1}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",low_block
+9.49,5.5,0.5,1,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
+4.41,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",low_block
+14.17,6.0,0.5,2,"[{'name': 'low_block', 'count': 2}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 3}, {'name': 'double_jump', 'count': 1}]",high_block
+14.26,6.0,0.5,2,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 2}]","[{'name': 'single_jump', 'count': 3}, {'name': 'double_jump', 'count': 3}]",high_block
+14.14,6.0,0.5,2,"[{'name': 'low_block', 'count': 2}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 4}, {'name': 'double_jump', 'count': 1}]",high_block
+22.71,7.0,0.5,4,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 3}]","[{'name': 'single_jump', 'count': 11}, {'name': 'double_jump', 'count': 3}]",low_block
