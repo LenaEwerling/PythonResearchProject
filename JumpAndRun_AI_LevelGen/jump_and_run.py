@@ -1,51 +1,149 @@
 from os import write
+from kivy.app import App
+from kivy.uix.widget import Widget
+from kivy.clock import Clock
+from kivy.core.window import Window
+from kivy.uix.label import Label
+import random
+import logging
 
-import pygame
+#import pygame
 import time
-import config
+#import config
 import Player
+import Platform
 import Obstacle
 import data_logger
 
-class Game:
-    def __init__(self):
-        self.screen = pygame.display.set_mode((config.WIDTH, config.HEIGHT))
-        pygame.display.set_caption("Jump and Run AI Level Gen")
-        self.clock = pygame.time.Clock()
-        self.running = True
+"""set up logging"""
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("Game")
 
-        # Game objects
+class Game(Widget):
+    def __init__(self, **kwargs):
+        super(Game, self).__init__(**kwargs)
+        Window.clearcolor = (0.2, 0.2, 0.2, 1)
+
         self.player = Player.Player()
-        self.obstacle = Obstacle.Obstacle(speed = 5)
-        self.start_time = time.time()
-        self.speed_increase_interval = 5 # increase every 5 seconds
-        self.sped_increase_summand = 0.5 # increase by 0.5
+        self.platform = Platform.Platform()
+        self.obstacles = [] #list of obstacles
+        self.game_over = False
+        self.time_elapsed = 0 #Timer in seconds
+        self.speed = -5
+        self.speed_increase_interval = 10.0
+        self.speed_factor = 1.05
+        self.spawn_interval = 2.0
         self.logger = data_logger.DataLogger()
 
-    def check_collision(self):
-        """checks whether player collides with an obstacle"""
-        if self.player.x < self.obstacle.x + self.obstacle.width and self.player.x + self.player.width > self.obstacle.x:
-            if self.player.y + self.player.height > self.obstacle.y:
-                return True
-        return False
+        """Timer label top left"""
+        self.timer_label = Label(
+            text="Time: 0",
+            #pos=(10, 10),
+            #pos=(10, Window.height - 40),
+            size_hint=(None, None),
+            size=(100,30),
+            font_size=20,
+            color=(0,1,0,1)
+        )
+        self.timer_label.pos = (10, Window.height - self.timer_label.height - 10)
+        #logger.debug(f"Timer label created: text={self.timer_label.text}, pos={self.timer_label.pos}, color={self.timer_label.color}")
 
-    def detect_collision(self):
-        """handles collision between player and obstacle as well as a player passing an object successfully"""
-        if self.check_collision():
-            self.log_end_of_game()
-            elapsed_time = self.logger.time_survived
-            print("Game Over! Time survived: " + str(elapsed_time))
-            self.running = False
-        else:
-            self.check_passed_obstacle()
+        self.add_widget(self.platform)
+        self.add_widget(self.player)
+        self.add_widget(self.timer_label)
+        #logger.debug("Timer label added to widget hierarchy")
 
-    def check_passed_obstacle(self):
+        """binding to Window size change"""
+        Window.bind(on_resize=self.update_timer_pos)
+
+        """binding to key"""
+        self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
+        self._keyboard.bind(on_key_down=self._on_key_down)
+
+        """call update function regularely"""
+        self.clock_event = Clock.schedule_interval(self.update, 1.0 / 60.0)
+        self.spawn_event = Clock.schedule_interval(self.spawn_obstacle, self.spawn_interval)
+        self.speed_event = Clock.schedule_interval(self.speed_up, self.speed_increase_interval)
+
+    def speed_up(self, dt):
+        self.speed *= self.speed_factor
+        for obstacle in self.obstacles:
+            obstacle.speed = self.speed
+        self.spawn_interval *= 0.95
+        if self.spawn_event:
+            self.spawn_event.cancel()
+        self.spawn_event = Clock.schedule_interval(self.spawn_obstacle, self.spawn_interval)
+        logger.debug(f"Speed increased to {self.speed} and spawntime decreased to {self.spawn_interval}")
+
+    def update_timer_pos(self, window, width, height):
+        self.timer_label.pos = (10, height - self.timer_label.height - 10)
+
+    def _keyboard_closed(self):
+        self._keyboard.unbind(on_key_down=self._on_key_down)
+        self_keyboard = None
+
+    def _on_key_down(self, keyboard, keycode, text, modifiers):
+        if keycode[1] == 'spacebar': #space for jumping
+            self.player.jump()
+
+    def spawn_obstacle(self, dt):
+        if not self.game_over:
+            obstacle_type = random.randrange(0,2)
+            new_obstacle = Obstacle.Obstacle(obstacle_type, self.speed)
+            self.add_widget(new_obstacle)
+            self.obstacles.append(new_obstacle)
+
+    def check_collision(self, player, obstacle):
+        """simple rectangle collision check"""
+        px, py = player.pos
+        pw, ph = player.size
+        ox, oy = obstacle.pos
+        ow, oh = obstacle.size
+
+        return (px < ox + ow and 
+                px + pw > ox and
+                py < oy + oh and
+                py + ph > oy)
+
+    def update(self, dt):
+        if not self.game_over:
+            """update timer"""
+            self.time_elapsed += dt
+            self.timer_label.text = f"Time: {int(self.time_elapsed)}"
+            #logger.debug(f"Timer label updated: text={self.timer_label.text}, pos={self.timer_label.pos}, exists={self.timer_label in self.children}")
+
+            #self.player.update()
+            self.log_jump(self.player.update())
+
+            """update obstacles"""
+            for obstacle in self.obstacles[:]:
+                if obstacle in self.children:
+                    obstacle.update()
+                
+                """remove obstacles leaving the screen"""
+                if obstacle.pos[0] < -obstacle.size[0]:
+                    self.remove_widget(obstacle)
+                    self.obstacles.remove(obstacle)
+                elif self.check_collision(self.player, obstacle):
+                    """check for collision"""
+                    self.game_over = True
+                    self.timer_label.size = (200, 30)
+                    self.timer_label.text = f"Game over! Time: {int(self.time_elapsed)}" 
+                    logger.debug(f"Game over: {self.timer_label.text}")
+                    self.clock_event.cancel()
+                    self.spawn_event.cancel()
+                    self.speed_event.cancel()
+                    self.log_end_of_game(obstacle)
+                else:
+                    self.check_passed_obstacle(obstacle)
+
+    def check_passed_obstacle(self, obst):
         """checks whether player has passed an obstacle"""
-        if self.obstacle.x + self.obstacle.width < self.player.x and self.obstacle.counted == False:
-            self.obstacle.counted = True
+        if obst.x + obst.width < self.player.x and obst.counted == False:
+            obst.counted = True
             self.logger.obstacles_cleared += 1
             for obstacle in self.logger.kinds_of_obstacles_cleared:
-                if obstacle["name"] == self.obstacle.type["name"]:
+                if obstacle["name"] == obst.type:
                     obstacle["count"] += 1
 
     def log_jump(self, jump_height):
@@ -60,60 +158,15 @@ class Game:
                 if movement["name"] == name:
                     movement["count"] += 1
 
-    def log_end_of_game(self):
+    def log_end_of_game(self, death_causing_obstacle):
         """logs end stats of game"""
-        self.logger.speed_at_end = self.obstacle.speed
-        self.logger.speed_factor = self.sped_increase_summand
-        self.logger.death_cause = self.obstacle.type["name"]
-        self.logger.time_survived = self.calculate_time_survived()
+        self.logger.speed_at_end = self.speed
+        self.logger.speed_interval = self.speed_increase_interval
+        self.logger.speed_factor = self.speed_factor
+        self.logger.death_cause = death_causing_obstacle.type
+        self.logger.time_survived = self.time_elapsed
         self.logger.save_game_data()
-
-    def calculate_time_survived(self):
-        return round(time.time() - self.start_time, 2)
-
-    def handle_events(self):
-        """handles events"""
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                self.running = False
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    self.player.jump()
-
-    def draw(self):
-        """drawing environment, Player, Obstacles and time survived"""
-        self.player.draw(self.screen)
-        self.obstacle.draw(self.screen)
-        pygame.draw.rect(self.screen, config.GROUND_COLOR, (0, config.HEIGHT - 20, config.WIDTH, 20))  # ground
-
-        # show time survived
-        elapsed_time = self.calculate_time_survived()
-        font = pygame.font.SysFont(None, 36)
-        text = font.render(f"Time: {elapsed_time}", True, config.BLACK)
-        self.screen.blit(text, (10, 10))
-
-    def run(self):
-        """runs the game"""
-        while self.running:
-            self.clock.tick(config.FPS)
-            self.screen.fill(config.WHITE)
-
-            self.handle_events()
-
-            # game logic
-            self.log_jump(self.player.apply_gravity())
-
-            if self.obstacle.move(): # in case the obstacle moves out of the window
-                self.obstacle = Obstacle.Obstacle(speed=self.obstacle.speed)
-
-            # increase the speed
-            if time.time() - self.start_time > self.speed_increase_interval:
-                self.obstacle.speed += 0.5
-                self.speed_increase_interval += 5
-
-            self.detect_collision()
-            self.draw()
-
-            pygame.display.update()
-
-        pygame.quit()
+        
+class JumpAndRunApp(App):
+    def build(self):
+        return Game()

@@ -1,5 +1,7 @@
 import pandas as pd
 import os
+from datetime import datetime
+import time
 
 DATA_FILE = "data/game_data.csv"
 
@@ -7,6 +9,7 @@ class DataLogger:
     def __init__(self):
         self.time_survived = 0
         self.speed_at_end = 0
+        self.speed_interval = 0
         self.speed_factor = 0
         self.obstacles_cleared = 0
         self.kinds_of_obstacles_cleared = [
@@ -26,9 +29,10 @@ class DataLogger:
 
         # Data as dictionary
         data = {
-            #"Run_ID": [run_id],
+            "DateTime": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
             "Time_Survived": [self.time_survived],
             "Speed_At_End": [self.speed_at_end],
+            "Change_Interval": [self.speed_interval],
             "Speed_Factor": [self.speed_factor],
             "Obstacles_Cleared": [self.obstacles_cleared],
             "Kinds_Of_Obstacles_Cleared": [self.kinds_of_obstacles_cleared],

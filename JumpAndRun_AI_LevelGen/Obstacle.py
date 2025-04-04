@@ -1,27 +1,33 @@
 import random
-import pygame
-import config
+from kivy.uix.widget import Widget
+from kivy.graphics import Rectangle, Color 
+from kivy.core.window import Window
 
-class Obstacle:
-    def __init__(self, speed):
-        self.width = 30
-        self.type = random.choice([
-            {"name": "low_block", "height": 30},  # small obstacle
-            {"name": "high_block", "height": 60},  # big obstacle
-        ])
-        self.height = self.type["height"]
-        self.x = config.WIDTH
-        self.y = config.HEIGHT - self.height - 20
-        self.speed = speed
-        self.counted = False
+class Obstacle(Widget):
+    def __init__(self, obstacle_type, speed, **kwargs):
+        super(Obstacle, self).__init__(**kwargs)
+        self.speed = speed #speed from left to right
+        self.pos = [Window.width, 100] # starts on the right
+        self.counted = False #tracks whether the obstacle was counted for stats
 
-    def move(self):
-        """moves obstacle to the left"""
-        self.x -= self.speed
-        if self.x < -self.width:
-            return True
-        return False
+        #Types of Obstacles
+        type_index = random.randrange(0,2) if obstacle_type is None else obstacle_type
+        match type_index:
+            case 0:  
+                self.size = (40, 40) # low Rectange
+                self.type = "low_block"
+            case 1:
+                self.size = (40, 80) # high Rectangle
+                self.type = "high_block"
+            case _:
+                raise ValueError(f"Invalid obstacle_type: {type_index}")
 
-    def draw(self, screen):
-        """draws obstacle"""
-        pygame.draw.rect(screen, config.BLACK, [self.x, self.y, self.width, self.height])
+        #draw obstacle
+        with self.canvas:
+            Color(0,1,0,1)
+            self.rect = Rectangle(pos=self.pos, size=self.size)
+
+    def update(self):
+        #move obstacle to left
+        self.pos[0] += self.speed
+        self.rect.pos = self.pos

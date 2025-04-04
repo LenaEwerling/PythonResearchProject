@@ -10,3 +10,10 @@
 14.26,6.0,0.5,2,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 2}]","[{'name': 'single_jump', 'count': 3}, {'name': 'double_jump', 'count': 3}]",high_block
 14.14,6.0,0.5,2,"[{'name': 'low_block', 'count': 2}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 4}, {'name': 'double_jump', 'count': 1}]",high_block
 22.71,7.0,0.5,4,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 3}]","[{'name': 'single_jump', 'count': 11}, {'name': 'double_jump', 'count': 3}]",low_block
+14.1,6.0,0.5,2,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 2}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 2}]",low_block
+<class 'datetime.date'>,<class 'datetime.time'>,4.36,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",low_block
+2025-04-03,00:00:00,4.37,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
+2025-04-03,1743693224.4861557,4.36,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
+2025-04-03 17:25:24.909604,4.36,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
+2025-04-03 17:26:45,4.36,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
+2025-04-04 23:05:29,7.610529400000814,-5,10.0,1.05,2,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 1}]","[{'name': 'single_jump', 'count': 1}, {'name': 'double_jump', 'count': 1}]",high_block
