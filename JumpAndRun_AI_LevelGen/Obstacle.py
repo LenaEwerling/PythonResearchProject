@@ -14,10 +14,10 @@ class Obstacle(Widget):
         type_index = random.randrange(0,2) if obstacle_type is None else obstacle_type
         match type_index:
             case 0:  
-                self.size = (40, 40) # low Rectange
+                self.size = (40, 60) # low Rectange
                 self.type = "low_block"
             case 1:
-                self.size = (40, 80) # high Rectangle
+                self.size = (40, 100) # high Rectangle
                 self.type = "high_block"
             case _:
                 raise ValueError(f"Invalid obstacle_type: {type_index}")

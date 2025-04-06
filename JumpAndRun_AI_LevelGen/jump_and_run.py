@@ -6,6 +6,7 @@ from kivy.core.window import Window
 from kivy.uix.label import Label
 import random
 import logging
+import json
 
 #import pygame
 import time
@@ -14,6 +15,7 @@ import Player
 import Platform
 import Obstacle
 import data_logger
+import Analyzer
 
 """set up logging"""
 logging.basicConfig(level=logging.DEBUG)
@@ -27,31 +29,25 @@ class Game(Widget):
         self.player = Player.Player()
         self.platform = Platform.Platform()
         self.obstacles = [] #list of obstacles
+        self.analyzer = Analyzer.Analyzer()
         self.game_over = False
         self.time_elapsed = 0 #Timer in seconds
-        self.speed = -5
-        self.speed_increase_interval = 10.0
-        self.speed_factor = 1.05
-        self.spawn_interval = 2.0
+        self.load_parameters()
         self.logger = data_logger.DataLogger()
 
         """Timer label top left"""
         self.timer_label = Label(
             text="Time: 0",
-            #pos=(10, 10),
-            #pos=(10, Window.height - 40),
             size_hint=(None, None),
             size=(100,30),
             font_size=20,
             color=(0,1,0,1)
         )
         self.timer_label.pos = (10, Window.height - self.timer_label.height - 10)
-        #logger.debug(f"Timer label created: text={self.timer_label.text}, pos={self.timer_label.pos}, color={self.timer_label.color}")
 
         self.add_widget(self.platform)
         self.add_widget(self.player)
         self.add_widget(self.timer_label)
-        #logger.debug("Timer label added to widget hierarchy")
 
         """binding to Window size change"""
         Window.bind(on_resize=self.update_timer_pos)
@@ -63,13 +59,23 @@ class Game(Widget):
         """call update function regularely"""
         self.clock_event = Clock.schedule_interval(self.update, 1.0 / 60.0)
         self.spawn_event = Clock.schedule_interval(self.spawn_obstacle, self.spawn_interval)
-        self.speed_event = Clock.schedule_interval(self.speed_up, self.speed_increase_interval)
+        self.speed_event = Clock.schedule_interval(self.speed_up, self.change_interval)
+
+    def load_parameters(self):
+        with open('parameter.json', 'r') as f:
+            params = json.load(f)
+            self.speed = params['speed']
+            self.change_interval = params['change_interval']
+            self.speed_factor = params['speed_factor']
+            self.spawn_interval = params['spawn_interval']
+            self.spawn_factor = params['spawn_factor']
+
 
     def speed_up(self, dt):
         self.speed *= self.speed_factor
         for obstacle in self.obstacles:
             obstacle.speed = self.speed
-        self.spawn_interval *= 0.95
+        self.spawn_interval *= self.spawn_factor
         if self.spawn_event:
             self.spawn_event.cancel()
         self.spawn_event = Clock.schedule_interval(self.spawn_obstacle, self.spawn_interval)
@@ -134,6 +140,7 @@ class Game(Widget):
                     self.spawn_event.cancel()
                     self.speed_event.cancel()
                     self.log_end_of_game(obstacle)
+                    self.analyzer.analyze()
                 else:
                     self.check_passed_obstacle(obstacle)
 
@@ -161,8 +168,10 @@ class Game(Widget):
     def log_end_of_game(self, death_causing_obstacle):
         """logs end stats of game"""
         self.logger.speed_at_end = self.speed
-        self.logger.speed_interval = self.speed_increase_interval
+        self.logger.change_interval = self.change_interval
         self.logger.speed_factor = self.speed_factor
+        self.logger.spawn_interval = self.spawn_interval
+        self.logger.spawn_factor = self.spawn_factor
         self.logger.death_cause = death_causing_obstacle.type
         self.logger.time_survived = self.time_elapsed
         self.logger.save_game_data()

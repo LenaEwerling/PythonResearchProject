@@ -1,19 +1,11 @@
-9.94,5.5,0.5,0,"{'low_block': [0], 'high_block': [0]}","{'single_jump': [0], 'double_jump': [0]}",high_block
-4.81,5,0.5,0,"{'low_block': [0], 'high_block': [0]}","{'single_jump': [0], 'double_jump': [0]}",low_block
-26.62,7.5,0.5,5,"[{'name': 'low_block', 'count': 3}, {'name': 'high_block', 'count': 2}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",low_block
-14.2,6.0,0.5,2,"[{'name': 'low_block', 'count': 2}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
-33.67,8.0,0.5,7,"[{'name': 'low_block', 'count': 4}, {'name': 'high_block', 'count': 3}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
-14.13,6.0,0.5,2,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 1}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",low_block
-9.49,5.5,0.5,1,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
-4.41,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",low_block
-14.17,6.0,0.5,2,"[{'name': 'low_block', 'count': 2}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 3}, {'name': 'double_jump', 'count': 1}]",high_block
-14.26,6.0,0.5,2,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 2}]","[{'name': 'single_jump', 'count': 3}, {'name': 'double_jump', 'count': 3}]",high_block
-14.14,6.0,0.5,2,"[{'name': 'low_block', 'count': 2}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 4}, {'name': 'double_jump', 'count': 1}]",high_block
-22.71,7.0,0.5,4,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 3}]","[{'name': 'single_jump', 'count': 11}, {'name': 'double_jump', 'count': 3}]",low_block
-14.1,6.0,0.5,2,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 2}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 2}]",low_block
-<class 'datetime.date'>,<class 'datetime.time'>,4.36,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",low_block
-2025-04-03,00:00:00,4.37,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
-2025-04-03,1743693224.4861557,4.36,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
-2025-04-03 17:25:24.909604,4.36,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
-2025-04-03 17:26:45,4.36,5,0.5,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
-2025-04-04 23:05:29,7.610529400000814,-5,10.0,1.05,2,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 1}]","[{'name': 'single_jump', 'count': 1}, {'name': 'double_jump', 'count': 1}]",high_block
+DateTime,Time_Survived,Speed_At_End,Change_Interval,Speed_Factor,Spawn_Interval,Spawn_Factor,Obstacles_Cleared,Kinds_Of_Obstacles_Cleared,Kinds_Of_Movement,Death_Cause
+2025-04-06 14:43:19,15.437207799986936,-5.25,10.0,1.05,1.9,0.95,5,"[{'name': 'low_block', 'count': 3}, {'name': 'high_block', 'count': 2}]","[{'name': 'single_jump', 'count': 3}, {'name': 'double_jump', 'count': 2}]",high_block
+2025-04-06 14:48:34,9.717323100019712,-5,10.0,1.05,2,0.95,3,"[{'name': 'low_block', 'count': 2}, {'name': 'high_block', 'count': 1}]","[{'name': 'single_jump', 'count': 2}, {'name': 'double_jump', 'count': 1}]",high_block
+2025-04-06 14:48:59,13.596283899998525,-5.25,10.0,1.05,1.9,0.95,4,"[{'name': 'low_block', 'count': 4}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 4}, {'name': 'double_jump', 'count': 0}]",high_block
+2025-04-06 14:49:25,13.426678299991181,-5.25,10.0,1.05,1.9,0.95,5,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 4}]","[{'name': 'single_jump', 'count': 1}, {'name': 'double_jump', 'count': 4}]",low_block
+2025-04-06 14:49:57,20.988109800004167,-5.5125,10.0,1.05,1.805,0.95,9,"[{'name': 'low_block', 'count': 4}, {'name': 'high_block', 'count': 5}]","[{'name': 'single_jump', 'count': 4}, {'name': 'double_jump', 'count': 5}]",high_block
+2025-04-06 14:55:42,3.622271499974886,-5,10.0,1.05,2,0.95,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 1}, {'name': 'double_jump', 'count': 0}]",low_block
+2025-04-06 14:56:22,5.6246137999987695,-5,10.0,1.05,2,0.95,1,"[{'name': 'low_block', 'count': 1}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 1}, {'name': 'double_jump', 'count': 0}]",low_block
+2025-04-06 14:56:57,3.7847427999950014,-5,10.0,1.05,2,0.95,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
+2025-04-06 15:20:01,3.720542499999283,-5,10.0,1.05,2,0.95,0,"[{'name': 'low_block', 'count': 0}, {'name': 'high_block', 'count': 0}]","[{'name': 'single_jump', 'count': 0}, {'name': 'double_jump', 'count': 0}]",high_block
+2025-04-06 15:33:16,33.101779100019485,-5.788125000000001,10.0,1.05,1.7147499999999998,0.95,15,"[{'name': 'low_block', 'count': 8}, {'name': 'high_block', 'count': 7}]","[{'name': 'single_jump', 'count': 8}, {'name': 'double_jump', 'count': 7}]",low_block
