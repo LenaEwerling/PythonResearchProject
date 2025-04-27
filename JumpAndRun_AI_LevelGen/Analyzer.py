@@ -43,19 +43,27 @@ class Analyzer:
         
     def adjust_initial_dificulty(self, avg_time_survived):
         if avg_time_survived == 0.0:
-            print("avg_time_survived invalid")
+            print("avg_time_survived is invalid")
             return
+        probability = random.random()
+        print(probability)
+        print(self.params['obstacle_factor'])
         if avg_time_survived <= 30:                      #to difficult
             print("to difficult")
-            self.params['speed'] -= 0.02
+            if (self.params['speed'] >= 1.02):
+                self.params['speed'] -= 0.02
             self.params['spawn_interval'] += 0.02
+            if (probability <= 0.3 and self.params['obstacle_factor'] >= 0.2):
+                print("decrease obstacle difficulty")
+                self.params['obstacle_factor'] -= 0.05
         elif avg_time_survived >= 90:                    #to easy
             print("to easy")
             self.params['speed'] += 0.02
-            self.params['spawn_interval'] -= 0.02
-            probability = random.random()
-            if (probability >= 0.3):
+            if (self.params['spawn_interval'] <= 0.22):
+                self.params['spawn_interval'] -= 0.02
+            if (probability <= 0.3 and self.params['obstacle_factor'] <= 0.8):
                 print("increase obstacle difficulty")
+                self.params['obstacle_factor'] += 0.05
             
 
     def adjust_factors(self, fract_parts):

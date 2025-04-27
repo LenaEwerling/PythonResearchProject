@@ -69,6 +69,7 @@ class Game(Widget):
             self.speed_factor = params['speed_factor']
             self.spawn_interval = params['spawn_interval']
             self.spawn_factor = params['spawn_factor']
+            self.obstacle_factor = params['obstacle_factor']
 
 
     def speed_up(self, dt):
@@ -94,7 +95,13 @@ class Game(Widget):
 
     def spawn_obstacle(self, dt):
         if not self.game_over:
-            obstacle_type = random.randrange(0,2)
+            weights = [
+                (1 - self.obstacle_factor) ** i for i in range(Obstacle.Obstacle.obstacle_kind_count) #calculate weights based on difficulty factor
+            ][::1] #Umkehren so that 0 is weighted higher with lower factor
+            total = sum(weights)
+            weights = [w / total for w in weights] #normalize
+            obstacle_type = random.choices(range(Obstacle.Obstacle.obstacle_kind_count), weights=weights, k=1)[0]
+            #obstacle_type = random.randrange(0,2)
             new_obstacle = Obstacle.Obstacle(obstacle_type, self.speed)
             self.add_widget(new_obstacle)
             self.obstacles.append(new_obstacle)
@@ -116,9 +123,7 @@ class Game(Widget):
             """update timer"""
             self.time_elapsed += dt
             self.timer_label.text = f"Time: {int(self.time_elapsed)}"
-            #logger.debug(f"Timer label updated: text={self.timer_label.text}, pos={self.timer_label.pos}, exists={self.timer_label in self.children}")
 
-            #self.player.update()
             self.log_jump(self.player.update())
 
             """update obstacles"""

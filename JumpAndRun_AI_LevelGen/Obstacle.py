@@ -4,6 +4,9 @@ from kivy.graphics import Rectangle, Color
 from kivy.core.window import Window
 
 class Obstacle(Widget):
+
+    obstacle_kind_count = 2
+
     def __init__(self, obstacle_type, speed, **kwargs):
         super(Obstacle, self).__init__(**kwargs)
         self.speed = speed #speed from left to right

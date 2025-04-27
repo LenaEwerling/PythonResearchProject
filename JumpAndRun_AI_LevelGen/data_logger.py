@@ -24,8 +24,6 @@ class DataLogger:
         ]
         self.death_cause = ""
 
-
-
     def save_game_data(self):
         """Saves Gamedata in a csv file"""
 
