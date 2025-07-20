@@ -6,7 +6,7 @@ import json
 import random
 
 DATA_FILE = "data/game_data.csv"
-PARAMETER_FILE = "parameter.json"
+PARAMETER_FILE = "analysis/parameter.json"
 
 class Analyzer:
     def __init__(self):

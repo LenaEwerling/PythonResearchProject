@@ -7,14 +7,16 @@ class Obstacle(Widget):
 
     obstacle_kind_count = 2
 
-    def __init__(self, obstacle_type, speed, **kwargs):
+    def __init__(self, obstacle_factor, speed, **kwargs):
         super(Obstacle, self).__init__(**kwargs)
         self.speed = speed #speed from left to right
         self.pos = [Window.width, 100] # starts on the right
         self.counted = False #tracks whether the obstacle was counted for stats
 
+        self.obstacle_type = self.get_obstacle_type(obstacle_factor)
+
         #Types of Obstacles
-        type_index = random.randrange(0,2) if obstacle_type is None else obstacle_type
+        type_index = random.randrange(0,2) if self.obstacle_type is None else self.obstacle_type
         match type_index:
             case 0:  
                 self.size = (40, 60) # low Rectange
@@ -34,3 +36,11 @@ class Obstacle(Widget):
         #move obstacle to left
         self.pos[0] += self.speed
         self.rect.pos = self.pos
+
+    def get_obstacle_type(self, obstacle_factor):
+        weights = [
+            (1 - obstacle_factor) ** i for i in range(self.obstacle_kind_count) #calculate weights based on difficulty factor
+        ][::1] #Umkehren so that 0 is weighted higher with lower factor
+        total = sum(weights)
+        weights = [w / total for w in weights] #normalize
+        return random.choices(range(self.obstacle_kind_count), weights=weights, k=1)[0]

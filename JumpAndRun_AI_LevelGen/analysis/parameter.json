@@ -1,0 +1,8 @@
+{
+  "speed": -5.0,
+  "spawn_interval": 2.7000000000000006,
+  "change_interval": 10.0,
+  "speed_factor": 1.05,
+  "spawn_factor": 0.95,
+  "obstacle_factor": 0.30000000000000004
+}

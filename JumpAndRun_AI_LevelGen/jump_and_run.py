@@ -11,11 +11,12 @@ import json
 #import pygame
 import time
 #import config
-import Player
-import Platform
-import Obstacle
-import data_logger
-import Analyzer
+from environment import Player
+from environment import Platform
+from environment import Obstacle
+from environment import Timer
+from analysis import data_logger
+from analysis import Analyzer
 
 """set up logging"""
 logging.basicConfig(level=logging.DEBUG)
@@ -29,28 +30,19 @@ class Game(Widget):
         self.player = Player.Player()
         self.platform = Platform.Platform()
         self.obstacles = [] #list of obstacles
+        self.timer = Timer.Timer(Window.height)
         self.analyzer = Analyzer.Analyzer()
         self.game_over = False
-        self.time_elapsed = 0 #Timer in seconds
         self.load_parameters()
         self.logger = data_logger.DataLogger()
-
-        """Timer label top left"""
-        self.timer_label = Label(
-            text="Time: 0",
-            size_hint=(None, None),
-            size=(100,30),
-            font_size=20,
-            color=(0,1,0,1)
-        )
-        self.timer_label.pos = (10, Window.height - self.timer_label.height - 10)
+        self.call_adjust = False
 
         self.add_widget(self.platform)
         self.add_widget(self.player)
-        self.add_widget(self.timer_label)
+        self.add_widget(self.timer)
 
         """binding to Window size change"""
-        Window.bind(on_resize=self.update_timer_pos)
+        Window.bind(on_resize=self.resize)
 
         """binding to key"""
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
@@ -60,9 +52,13 @@ class Game(Widget):
         self.clock_event = Clock.schedule_interval(self.update, 1.0 / 60.0)
         self.spawn_event = Clock.schedule_interval(self.spawn_obstacle, self.spawn_interval)
         self.speed_event = Clock.schedule_interval(self.speed_up, self.change_interval)
+        self.spawn_obstacle()
+
+    def resize(self, window, width, height):
+        self.timer.updateTimerPos(window.height)
 
     def load_parameters(self):
-        with open('parameter.json', 'r') as f:
+        with open('analysis/parameter.json', 'r') as f:
             params = json.load(f)
             self.speed = params['speed']
             self.change_interval = params['change_interval']
@@ -73,17 +69,18 @@ class Game(Widget):
 
 
     def speed_up(self, dt):
+        self.call_adjust = True
+
+    def adjust_interval(self):
         self.speed *= self.speed_factor
         for obstacle in self.obstacles:
             obstacle.speed = self.speed
         self.spawn_interval *= self.spawn_factor
         if self.spawn_event:
             self.spawn_event.cancel()
+        #self.spawn_obstacle()
         self.spawn_event = Clock.schedule_interval(self.spawn_obstacle, self.spawn_interval)
         logger.debug(f"Speed increased to {self.speed} and spawntime decreased to {self.spawn_interval}")
-
-    def update_timer_pos(self, window, width, height):
-        self.timer_label.pos = (10, height - self.timer_label.height - 10)
 
     def _keyboard_closed(self):
         self._keyboard.unbind(on_key_down=self._on_key_down)
@@ -93,18 +90,20 @@ class Game(Widget):
         if keycode[1] == 'spacebar': #space for jumping
             self.player.jump()
 
-    def spawn_obstacle(self, dt):
+    def spawn_obstacle(self, dt = 0):
         if not self.game_over:
-            weights = [
-                (1 - self.obstacle_factor) ** i for i in range(Obstacle.Obstacle.obstacle_kind_count) #calculate weights based on difficulty factor
-            ][::1] #Umkehren so that 0 is weighted higher with lower factor
-            total = sum(weights)
-            weights = [w / total for w in weights] #normalize
-            obstacle_type = random.choices(range(Obstacle.Obstacle.obstacle_kind_count), weights=weights, k=1)[0]
-            #obstacle_type = random.randrange(0,2)
-            new_obstacle = Obstacle.Obstacle(obstacle_type, self.speed)
+            # weights = [
+            #     (1 - self.obstacle_factor) ** i for i in range(Obstacle.Obstacle.obstacle_kind_count) #calculate weights based on difficulty factor
+            # ][::1] #Umkehren so that 0 is weighted higher with lower factor
+            # total = sum(weights)
+            # weights = [w / total for w in weights] #normalize
+            # obstacle_type = random.choices(range(Obstacle.Obstacle.obstacle_kind_count), weights=weights, k=1)[0]
+            new_obstacle = Obstacle.Obstacle(self.obstacle_factor, self.speed)
             self.add_widget(new_obstacle)
             self.obstacles.append(new_obstacle)
+            if (self.call_adjust):
+                self.adjust_interval()
+                self.call_adjust = False
 
     def check_collision(self, player, obstacle):
         """simple rectangle collision check"""
@@ -121,8 +120,9 @@ class Game(Widget):
     def update(self, dt):
         if not self.game_over:
             """update timer"""
-            self.time_elapsed += dt
-            self.timer_label.text = f"Time: {int(self.time_elapsed)}"
+            # self.time_elapsed += dt
+            # self.timer_label.text = f"Time: {int(self.time_elapsed)}"
+            self.timer.updateTimer(dt)
 
             self.log_jump(self.player.update())
 
@@ -138,9 +138,8 @@ class Game(Widget):
                 elif self.check_collision(self.player, obstacle):
                     """check for collision"""
                     self.game_over = True
-                    self.timer_label.size = (200, 30)
-                    self.timer_label.text = f"Game over! Time: {int(self.time_elapsed)}" 
-                    logger.debug(f"Game over: {self.timer_label.text}")
+                    self.timer.gameOver()
+                    logger.debug(f"Game over- Time survived: {self.timer.getTime()}")
                     self.clock_event.cancel()
                     self.spawn_event.cancel()
                     self.speed_event.cancel()
@@ -178,7 +177,7 @@ class Game(Widget):
         self.logger.spawn_interval = self.spawn_interval
         self.logger.spawn_factor = self.spawn_factor
         self.logger.death_cause = death_causing_obstacle.type
-        self.logger.time_survived = self.time_elapsed
+        self.logger.time_survived = self.timer.getTime()
         self.logger.save_game_data()
         
 class JumpAndRunApp(App):

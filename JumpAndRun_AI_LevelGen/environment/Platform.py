@@ -1,6 +1,11 @@
 from kivy.uix.widget import Widget
 from kivy.graphics import Rectangle, Color 
 from kivy.core.window import Window
+import logging
+
+"""set up logging"""
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("Game")
 
 class Platform(Widget):
     def __init__(self, **kwargs):
@@ -12,3 +17,8 @@ class Platform(Widget):
         with self.canvas:
             Color(0.5, 0.5, 0.5, 1) #gray
             self.rect = Rectangle(pos=self.pos, size=self.size)
+
+    def resize(self, width):
+        logger.debug(f"resize called with width: {width}")
+        self.size = (width, 100)
+        self.rect = Rectangle(pos=self.pos, size=self.size)
