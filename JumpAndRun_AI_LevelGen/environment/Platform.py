@@ -17,8 +17,3 @@ class Platform(Widget):
         with self.canvas:
             Color(0.5, 0.5, 0.5, 1) #gray
             self.rect = Rectangle(pos=self.pos, size=self.size)
-
-    def resize(self, width):
-        logger.debug(f"resize called with width: {width}")
-        self.size = (width, 100)
-        self.rect = Rectangle(pos=self.pos, size=self.size)

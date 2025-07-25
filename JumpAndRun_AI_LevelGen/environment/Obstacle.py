@@ -12,6 +12,7 @@ class Obstacle(Widget):
         self.speed = speed #speed from left to right
         self.pos = [Window.width, 100] # starts on the right
         self.counted = False #tracks whether the obstacle was counted for stats
+        self.size_hint = (None, None)
 
         self.obstacle_type = self.get_obstacle_type(obstacle_factor)
 

@@ -1,10 +1,16 @@
 from kivy.uix.widget import Widget
 from kivy.graphics import Rectangle, Color 
+import logging
+
+"""set up logging"""
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("Game")
 
 class Player(Widget):
     def __init__(self, **kwargs):
         super(Player, self).__init__(**kwargs)
         self.size = (50,50)
+        self.size_hint = (None, None)
         self.pos = (100, 100)
         self.velocity_y = 0
         self.gravity = -0.3
@@ -14,7 +20,7 @@ class Player(Widget):
 
         # draw player
         with self.canvas:
-            Color(1, 0, 0, 1) #rot
+            Color(1, 0, 0, 1) #red
             self.rect = Rectangle(pos=self.pos, size=self.size)
     
     def update(self):
@@ -39,3 +45,10 @@ class Player(Widget):
         if self.is_jumping < self.max_jumps:
             self.velocity_y = self.jump_strength
             self.is_jumping += 1
+
+    def reset(self):
+        self.size = (50,50)
+        self.pos = (100, 100)
+        self.is_jumping = False
+        self.velocity_y = 0
+        logger.info(f"reset Player: {self.pos}, jumping: {self.is_jumping}, velocity:{self.velocity_y}")

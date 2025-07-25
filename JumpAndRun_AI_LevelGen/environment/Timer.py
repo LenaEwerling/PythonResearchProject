@@ -33,4 +33,7 @@ class Timer(Widget):
 
     def getTime(self):
         return self.timeElapsed
+
+    def setTime(self, time):
+        self.timeElapsed = time
     

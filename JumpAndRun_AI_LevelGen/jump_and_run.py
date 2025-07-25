@@ -1,9 +1,11 @@
 from os import write
 from kivy.app import App
-from kivy.uix.widget import Widget
+# from kivy.uix.widget import Widget
+from kivy.uix.screenmanager import Screen
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.uix.label import Label
+from kivy.uix.boxlayout import BoxLayout
 import random
 import logging
 import json
@@ -22,17 +24,16 @@ from analysis import Analyzer
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("Game")
 
-class Game(Widget):
+class Game(Screen):
     def __init__(self, **kwargs):
-        super(Game, self).__init__(**kwargs)
-        Window.clearcolor = (0.2, 0.2, 0.2, 1)
-
+        super().__init__(**kwargs)
+        self.layout = BoxLayout(orientation='vertical')
         self.player = Player.Player()
         self.platform = Platform.Platform()
-        self.obstacles = [] #list of obstacles
+        self.obstacles = []
         self.timer = Timer.Timer(Window.height)
         self.analyzer = Analyzer.Analyzer()
-        self.game_over = False
+        self.game_running = False
         self.load_parameters()
         self.logger = data_logger.DataLogger()
         self.call_adjust = False
@@ -48,11 +49,35 @@ class Game(Widget):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self)
         self._keyboard.bind(on_key_down=self._on_key_down)
 
-        """call update function regularely"""
+    def initiate_schedulers(self):
         self.clock_event = Clock.schedule_interval(self.update, 1.0 / 60.0)
         self.spawn_event = Clock.schedule_interval(self.spawn_obstacle, self.spawn_interval)
         self.speed_event = Clock.schedule_interval(self.speed_up, self.change_interval)
         self.spawn_obstacle()
+
+    def quit_schedulers(self):
+        if hasattr(self, 'clock_event'):
+            self.clock_event.cancel()
+        if hasattr(self, 'spawn_event'):
+            self.spawn_event.cancel()
+        if hasattr(self, 'speed_event'):
+            self.speed_event.cancel()
+
+    def on_enter(self):
+        #called wenn screen is shown
+        self.game_running = True
+        self.initiate_schedulers()
+
+    def clean_up(self):
+        for obstacle in self.obstacles[:]:
+            self.remove_widget(obstacle)
+            logger.error("remove obstacle")
+        self.obstacles = []
+        self.timer.setTime(0)
+        self.player.reset()
+        self.layout.do_layout()
+        self.quit_schedulers()
+        
 
     def resize(self, window, width, height):
         self.timer.updateTimerPos(window.height)
@@ -78,7 +103,6 @@ class Game(Widget):
         self.spawn_interval *= self.spawn_factor
         if self.spawn_event:
             self.spawn_event.cancel()
-        #self.spawn_obstacle()
         self.spawn_event = Clock.schedule_interval(self.spawn_obstacle, self.spawn_interval)
         logger.debug(f"Speed increased to {self.speed} and spawntime decreased to {self.spawn_interval}")
 
@@ -91,14 +115,9 @@ class Game(Widget):
             self.player.jump()
 
     def spawn_obstacle(self, dt = 0):
-        if not self.game_over:
-            # weights = [
-            #     (1 - self.obstacle_factor) ** i for i in range(Obstacle.Obstacle.obstacle_kind_count) #calculate weights based on difficulty factor
-            # ][::1] #Umkehren so that 0 is weighted higher with lower factor
-            # total = sum(weights)
-            # weights = [w / total for w in weights] #normalize
-            # obstacle_type = random.choices(range(Obstacle.Obstacle.obstacle_kind_count), weights=weights, k=1)[0]
+        if self.game_running:
             new_obstacle = Obstacle.Obstacle(self.obstacle_factor, self.speed)
+            logger.debug(f"Spawned new obstacle at: {new_obstacle.pos}")
             self.add_widget(new_obstacle)
             self.obstacles.append(new_obstacle)
             if (self.call_adjust):
@@ -107,23 +126,20 @@ class Game(Widget):
 
     def check_collision(self, player, obstacle):
         """simple rectangle collision check"""
-        px, py = player.pos
-        pw, ph = player.size
-        ox, oy = obstacle.pos
-        ow, oh = obstacle.size
+        if not player or not obstacle:
+            return False
 
-        return (px < ox + ow and 
-                px + pw > ox and
-                py < oy + oh and
-                py + ph > oy)
+        player = (player.pos[0], player.pos[1], player.size[0], player.size[1])
+        obstacle = (obstacle.pos[0], obstacle.pos[1], obstacle.size[0], obstacle.size[1])
+
+        return (player[0] < obstacle[0] + obstacle[2] and 
+                player[0] + player[2] > obstacle[0] and
+                player[1] < obstacle[1] + obstacle[3] and
+                player[1] + player[3] > obstacle[1])
 
     def update(self, dt):
-        if not self.game_over:
-            """update timer"""
-            # self.time_elapsed += dt
-            # self.timer_label.text = f"Time: {int(self.time_elapsed)}"
+        if self.game_running:
             self.timer.updateTimer(dt)
-
             self.log_jump(self.player.update())
 
             """update obstacles"""
@@ -137,14 +153,16 @@ class Game(Widget):
                     self.obstacles.remove(obstacle)
                 elif self.check_collision(self.player, obstacle):
                     """check for collision"""
-                    self.game_over = True
+                    logger.debug("collided")
+                    self.game_running = False
                     self.timer.gameOver()
                     logger.debug(f"Game over- Time survived: {self.timer.getTime()}")
-                    self.clock_event.cancel()
-                    self.spawn_event.cancel()
-                    self.speed_event.cancel()
+                    self.quit_schedulers()
+                    self.player.reset()
                     self.log_end_of_game(obstacle)
                     self.analyzer.analyze()
+                    self.clean_up()
+                    self.manager.current = 'start' #back to start screen
                 else:
                     self.check_passed_obstacle(obstacle)
 

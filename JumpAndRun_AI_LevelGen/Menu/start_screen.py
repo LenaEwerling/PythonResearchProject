@@ -1,5 +1,5 @@
 from kivy.app import App
-from kivy.uix.screenmanager import ScreenManager, Screen
+from kivy.uix.screenmanager import Screen
 from kivy.uix.button import Button
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
@@ -21,4 +21,7 @@ class Start_screen(Screen):
         self.add_widget(layout)
 
         
-    def start_game(self):
+    def start_game(self, instance):
+        #game_screen = self.manager.get_screen('game')
+        #game_screen.clean_up()
+        self.manager.current = 'game' #change to game screen
