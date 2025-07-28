@@ -75,7 +75,6 @@ class Game(Screen):
         self.obstacles = []
         self.timer.setTime(0)
         self.player.reset()
-        self.layout.do_layout()
         self.quit_schedulers()
         
 
