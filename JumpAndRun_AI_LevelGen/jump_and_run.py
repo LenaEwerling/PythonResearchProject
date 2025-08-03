@@ -35,7 +35,7 @@ class Game(Screen):
         self.analyzer = Analyzer.Analyzer()
         self.game_running = False
         self.load_parameters()
-        self.logger = data_logger.DataLogger()
+        self.data_logger = data_logger.DataLogger()
         self.call_adjust = False
 
         self.add_widget(self.platform)
@@ -71,7 +71,6 @@ class Game(Screen):
     def clean_up(self):
         for obstacle in self.obstacles[:]:
             self.remove_widget(obstacle)
-            logger.error("remove obstacle")
         self.obstacles = []
         self.timer.setTime(0)
         self.player.reset()
@@ -116,7 +115,6 @@ class Game(Screen):
     def spawn_obstacle(self, dt = 0):
         if self.game_running:
             new_obstacle = Obstacle.Obstacle(self.obstacle_factor, self.speed)
-            logger.debug(f"Spawned new obstacle at: {new_obstacle.pos}")
             self.add_widget(new_obstacle)
             self.obstacles.append(new_obstacle)
             if (self.call_adjust):
@@ -152,7 +150,6 @@ class Game(Screen):
                     self.obstacles.remove(obstacle)
                 elif self.check_collision(self.player, obstacle):
                     """check for collision"""
-                    logger.debug("collided")
                     self.game_running = False
                     self.timer.gameOver()
                     logger.debug(f"Game over- Time survived: {self.timer.getTime()}")
@@ -169,8 +166,8 @@ class Game(Screen):
         """checks whether player has passed an obstacle"""
         if obst.x + obst.width < self.player.x and obst.counted == False:
             obst.counted = True
-            self.logger.obstacles_cleared += 1
-            for obstacle in self.logger.kinds_of_obstacles_cleared:
+            self.data_logger.obstacles_cleared += 1
+            for obstacle in self.data_logger.kinds_of_obstacles_cleared:
                 if obstacle["name"] == obst.type:
                     obstacle["count"] += 1
 
@@ -182,20 +179,20 @@ class Game(Screen):
                     name = "single_jump"
                 case 2:
                     name = "double_jump"
-            for movement in self.logger.kinds_of_movement:
+            for movement in self.data_logger.kinds_of_movement:
                 if movement["name"] == name:
                     movement["count"] += 1
 
     def log_end_of_game(self, death_causing_obstacle):
         """logs end stats of game"""
-        self.logger.speed_at_end = self.speed
-        self.logger.change_interval = self.change_interval
-        self.logger.speed_factor = self.speed_factor
-        self.logger.spawn_interval = self.spawn_interval
-        self.logger.spawn_factor = self.spawn_factor
-        self.logger.death_cause = death_causing_obstacle.type
-        self.logger.time_survived = self.timer.getTime()
-        self.logger.save_game_data()
+        self.data_logger.speed_at_end = self.speed
+        self.data_logger.change_interval = self.change_interval
+        self.data_logger.speed_factor = self.speed_factor
+        self.data_logger.spawn_interval = self.spawn_interval
+        self.data_logger.spawn_factor = self.spawn_factor
+        self.data_logger.death_cause = death_causing_obstacle.type
+        self.data_logger.time_survived = self.timer.getTime()
+        self.data_logger.save_game_data()
         
 class JumpAndRunApp(App):
     def build(self):
