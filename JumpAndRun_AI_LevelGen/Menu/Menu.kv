@@ -15,16 +15,28 @@
             font_size:15
             size_hint_y: 0.3
 
-        Widget:
-            id: chart_placeholder
+        BoxLayout:
+            orientation: 'horizontal'
             size_hint_y: 0.5
-            size: 400, 300
-            canvas.before:
-                Color:
-                    rgba: 0, 1, 0, 1  # Grüner Hintergrund zum Testen
-                Rectangle:
-                    pos: self.pos
-                    size: self.size
+            spacing: 10
+            Button:
+                text: '<'
+                size_hint: (0.1, 1.0)
+                on_press: root.switch_chart(-1)
+            Widget:
+                id: chart_placeholder
+                size_hint: (0.8, 1.0)
+                size: 400, 300
+                canvas.before:
+                    Color:
+                        rgba: 0, 1, 0, 1  # Grüner Hintergrund zum Testen
+                    Rectangle:
+                        pos: self.pos
+                        size: self.size
+            Button:
+                text: '>'
+                size_hint: (0.1, 1.0)
+                on_press: root.switch_chart(1)
 
         Button:
             text: "Start"
