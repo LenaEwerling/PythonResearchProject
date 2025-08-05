@@ -65,6 +65,7 @@ class Game(Screen):
 
     def on_enter(self):
         #called wenn screen is shown
+        self.load_parameters()
         self.game_running = True
         self.initiate_schedulers()
 

@@ -1,6 +1,5 @@
 import pandas as pd
 import numpy as np
-#import mathplotlib as plt
 import os
 import json
 import random
@@ -80,23 +79,3 @@ class Analyzer:
             print("to lush")
             self.params['speed_factor'] += 0.02
             self.params['spawn_factor'] -= 0.02
-
-
-
-
-
-    
- 
-
-
-
-# # calculate average time survived
-# average_time = df["Time_Survived"].mean()
-# print(f"Avarage time survived: {average_time:.2f} seconds")
-
-# # plot histogram of time survived
-# plt.hist(df["Time_Survived"], bins=10, color='blue', alpha=0.7)
-# plt.xlabel("Time survived (seconds)")
-# plt.ylabel("Run count")
-# plt.title("Distribution of survival time")
-# plt.show()
