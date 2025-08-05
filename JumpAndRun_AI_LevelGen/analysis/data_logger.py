@@ -111,12 +111,12 @@ class DataLogger:
 
         # Schwierigkeitsstufe bestimmen
         if difficulty_score <= 0.2:
-            return "Anfänger", difficulty_score
+            return "Beginner", difficulty_score
         elif difficulty_score <= 0.4:
-            return "Einsteiger", difficulty_score
+            return "Novice", difficulty_score
         elif difficulty_score <= 0.6:
-            return "Fortgeschritten", difficulty_score
+            return "Intermediate", difficulty_score
         elif difficulty_score <= 0.8:
-            return "Experte", difficulty_score
+            return "Advanced", difficulty_score
         else:
-            return "Meister", difficulty_score
+            return "Master", difficulty_score

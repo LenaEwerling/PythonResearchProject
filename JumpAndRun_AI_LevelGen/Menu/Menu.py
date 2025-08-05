@@ -67,7 +67,10 @@ class Menu(Screen):
                         obstacles_count = 0
                         logger.error(f"invalid entry in csv for obstacles_count: {last_entry[7]}")
                     death_cause = last_entry[10]
-                    stats_text = f"Last round: \nTime: {time_survived:.1f} seconds\nObstacles mastered: {obstacles_count}\nDeath cause: {death_cause}"
+                    classification = last_entry[11]
+                    difficulty = float(last_entry[12].strip()) if last_entry[12] and last_entry[12].strip() else 0.0
+                    difficulty = round(difficulty*10, 2)
+                    stats_text = f"Last round: \nTime: {time_survived:.1f} seconds\nObstacles mastered: {obstacles_count}\nDeath cause: {death_cause}\nDifficulty: {classification} ({difficulty})"
                     self.ids.stats_label.text = stats_text
                     logger.debug(f"loaded stats: {stats_text}")
 
@@ -75,7 +78,8 @@ class Menu(Screen):
                     current_chart = self.chart_types[self.current_chart_index]
                     data_key = current_chart['data_key']
                     last_5_data = []
-                    for entry in stats[-5:]:
+                    matching_entries = [entry for entry in reversed(stats) if entry[11] == classification][:5]
+                    for entry in reversed(matching_entries):
                         try:
                             value = float(entry[data_key].strip()) if entry[data_key] and entry[data_key].strip() else 0.0
                             last_5_data.append(value)
@@ -83,7 +87,7 @@ class Menu(Screen):
                             last_5_data.append(0.0)
                             logger.error(f"invalid entry in csv for data_key {data_key}: {entry[data_key]}")
 
-                    self.create_bar_chart(last_5_data, current_chart['name'], current_chart['ylabel'])
+                    self.create_bar_chart(last_5_data, current_chart['name'], current_chart['ylabel'], classification)
                 else:
                     logger.debug("No statistics available")
 
@@ -92,7 +96,7 @@ class Menu(Screen):
         except Exception as e:
             logger.error(f"Error while loading statistics: {str(e)}")
 
-    def create_bar_chart(self, data, title, ylabel):
+    def create_bar_chart(self, data, title, ylabel, difficulty_classification):
         logger.debug(f"Data for bar chart: {data}")
         logger.debug(f"chart_placeholder size: {self.ids.chart_placeholder.size}")
         logger.debug(f"chart_placeholder pos: {self.ids.chart_placeholder.pos}")
@@ -105,10 +109,12 @@ class Menu(Screen):
         fig = plt.figure(figsize=(6, 3))
         logger.debug("Figure created")
         ax = fig.add_subplot(1, 1, 1)
-        labels = [f"{i+1}" for i in range(len(data))]
+        labels = [str(-(len(data)) + i) for i in range(1, len(data) + 1)]  # z. B. -4, -3, -2, -1 für length=4
+        if len(data) > 0:
+            labels[-1] = "current"
         logger.warning(labels)
         ax.bar(labels, data, width=0.6, color='blue')
-        ax.set_xlabel('Rounds')
+        ax.set_xlabel(f'Rounds on difficulty: {difficulty_classification}')
         ax.set_ylabel(ylabel)
         ax.set_title(title)
         ax.grid(True, which='both', linestyle='--', linewidth=0.5)

@@ -66,6 +66,7 @@ class Game(Screen):
     def on_enter(self):
         #called wenn screen is shown
         self.load_parameters()
+        self.data_logger.obstacles_cleared = 0
         self.game_running = True
         self.initiate_schedulers()
 
