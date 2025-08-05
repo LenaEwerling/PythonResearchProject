@@ -30,8 +30,9 @@ class Menu(Screen):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.chart_types = [
-            {'name': 'Time Survived', 'data_key': 1, 'ylabel': 'Time (seconds)'},
-            {'name': 'Obstacles Mastered', 'data_key': 7, 'ylabel': 'Count'},
+            {'name': 'Time Survived', 'data_key': 1, 'ylabel': 'Time (seconds)', 'chart_type': 'bar'},
+            {'name': 'Obstacles Mastered', 'data_key': 7, 'ylabel': 'Count', 'chart_type': 'bar'},
+            {'name': 'Death Causes', 'data_key': 10, 'ylabel': 'Frequency', 'chart_type': 'hist'},
         ]
         self.current_chart_index = 0
         self.current_canvas = None  # Speichert das aktuelle Canvas-Widget
@@ -74,20 +75,25 @@ class Menu(Screen):
                     self.ids.stats_label.text = stats_text
                     logger.debug(f"loaded stats: {stats_text}")
 
-                    # Last 5 entries for the current chart type
+                    # get entries for the current chart type
                     current_chart = self.chart_types[self.current_chart_index]
                     data_key = current_chart['data_key']
-                    last_5_data = []
-                    matching_entries = [entry for entry in reversed(stats) if entry[11] == classification][:5]
+                    data = []
+                    matching_entries = [entry for entry in reversed(stats) if entry[11] == classification]
+                    if current_chart['chart_type'] == 'bar':
+                        matching_entries = matching_entries[:5]
                     for entry in reversed(matching_entries):
                         try:
-                            value = float(entry[data_key].strip()) if entry[data_key] and entry[data_key].strip() else 0.0
-                            last_5_data.append(value)
+                            #value = float(entry[data_key].strip()) if entry[data_key] and entry[data_key].strip() else 0.0
+                            value = entry[data_key].strip() if entry[data_key] and entry[data_key].strip() else ""
+                            if current_chart['chart_type'] == 'bar':
+                                   value = float(value) if value else 0.0
+                            data.append(value)
                         except ValueError:
-                            last_5_data.append(0.0)
+                            data.append(0.0 if current_chart['chart_type'] == 'bar' else "")
                             logger.error(f"invalid entry in csv for data_key {data_key}: {entry[data_key]}")
 
-                    self.create_bar_chart(last_5_data, current_chart['name'], current_chart['ylabel'], classification)
+                    self.create_chart(data, current_chart['name'], current_chart['ylabel'], classification, current_chart['chart_type'])
                 else:
                     logger.debug("No statistics available")
 
@@ -96,25 +102,32 @@ class Menu(Screen):
         except Exception as e:
             logger.error(f"Error while loading statistics: {str(e)}")
 
-    def create_bar_chart(self, data, title, ylabel, difficulty_classification):
-        logger.debug(f"Data for bar chart: {data}")
-        logger.debug(f"chart_placeholder size: {self.ids.chart_placeholder.size}")
-        logger.debug(f"chart_placeholder pos: {self.ids.chart_placeholder.pos}")
+    def create_chart(self, data, title, ylabel, difficulty_classification, chart_type):
+        logger.debug(f"Data for chart: {data}")
 
         # Schließe die alte Figur, falls vorhanden
         if plt.fignum_exists(plt.gcf().number):
             plt.close()
 
-        # Erstelle das Diagramm
+        # create Diagram
         fig = plt.figure(figsize=(6, 3))
-        logger.debug("Figure created")
         ax = fig.add_subplot(1, 1, 1)
-        labels = [str(-(len(data)) + i) for i in range(1, len(data) + 1)]  # z. B. -4, -3, -2, -1 für length=4
-        if len(data) > 0:
-            labels[-1] = "current"
-        logger.warning(labels)
-        ax.bar(labels, data, width=0.6, color='blue')
-        ax.set_xlabel(f'Rounds on difficulty: {difficulty_classification}')
+
+        if chart_type == 'bar':
+            length = len(data)
+            labels = [str(-(length) + i) for i in range(1, length + 1)]
+            if length > 0:
+                labels[-1] = "current"
+            ax.bar(labels, data, width=0.6, color='blue')
+            ax.set_xlabel(f'Rounds on difficulty: {difficulty_classification}')
+
+        elif chart_type == 'hist':
+            unique_causes = list(set(data))
+            counts = [data.count(cause) for cause in unique_causes]
+            logger.warning(f"Unique causes: {unique_causes}, Counts: {counts}")
+            ax.bar(unique_causes, counts, color=['red', 'green', 'blue', 'orange', 'purple'][:len(unique_causes)])
+            ax.set_xlabel('Death Causes')
+
         ax.set_ylabel(ylabel)
         ax.set_title(title)
         ax.grid(True, which='both', linestyle='--', linewidth=0.5)
@@ -123,33 +136,21 @@ class Menu(Screen):
 
         def add_canvas(dt):
             try:
-                # Entferne das alte Canvas, falls vorhanden
                 if self.current_canvas:
                     self.ids.chart_placeholder.remove_widget(self.current_canvas)
-                    logger.debug("Removed old canvas")
                 canvas = FigureCanvasKivyAgg(fig)
-                self.current_canvas = canvas  # Speichere das neue Canvas
-                logger.debug(f"canvas created: {canvas.size}")
+                self.current_canvas = canvas
                 canvas.size_hint = (None, None)
                 canvas.size = self.ids.chart_placeholder.size
                 canvas.pos = self.ids.chart_placeholder.pos
-                logger.debug(f"canvas set: size={canvas.size}, pos={canvas.pos}")
-                self.ids.chart_placeholder.clear_widgets()  # Sicherstellen, dass alle alten Widgets entfernt sind
-                logger.debug("cleared widget")
+                self.ids.chart_placeholder.clear_widgets()
                 self.ids.chart_placeholder.add_widget(canvas)
-                logger.debug("add widget")
-                canvas.draw()  # Explizites Neuzeichnen des Canvas
-                logger.debug("canvas drawn")
+                canvas.draw()
                 self.ids.chart_placeholder.canvas.ask_update()
-                logger.debug("add widget and update canvas")
-                # Binde Größe und Position dynamisch
                 self.ids.chart_placeholder.bind(
                     size=lambda instance, value: setattr(canvas, 'size', value),
                     pos=lambda instance, value: setattr(canvas, 'pos', value)
                 )
-                logger.debug("bound size and pos")
-                logger.warning(f"Canvas size after add: {canvas.size}")
-                logger.warning(f"Canvas position after add: {canvas.pos}")
             except AttributeError as e:
                 logger.error(f"Error while creating Canvas: {str(e)}")
                 self.ids.stats_label.text += "\nError while creating Diagram"
