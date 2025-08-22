@@ -3,17 +3,19 @@ from kivy.graphics import Rectangle, Color
 from kivy.core.window import Window
 import logging
 
-"""set up logging"""
+"""Set up logging."""
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("Game")
 
 class Platform(Widget):
+    """Platform class for the game's ground."""
     def __init__(self, **kwargs):
+        """Initialize the platform with size and position."""
         super(Platform, self).__init__(**kwargs)
         self.size = (Window.width, 100)
         self.pos = (0, 0)
 
-        #paint platform
+        # Draw platform rectangle
         with self.canvas:
-            Color(0.5, 0.5, 0.5, 1) #gray
+            Color(0.5, 0.5, 0.5, 1) # gray
             self.rect = Rectangle(pos=self.pos, size=self.size)

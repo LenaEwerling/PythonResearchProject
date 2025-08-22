@@ -13,22 +13,24 @@ from kivy.graphics import Color, Rectangle
 import matplotlib.pyplot as plt
 from kivy.lang import Builder
 
-"""load .kv-File"""
+"""Load the .kv file for UI layout."""
 Builder.load_file('Menu/Menu.kv')
 
-"""set up logging"""
+"""Set up logging."""
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 matplotlib_logger = logging.getLogger('matplotlib')
 matplotlib_logger.setLevel(logging.WARNING)
 
-"""set standard font for matplotlib"""
+"""Set standard font for Matplotlib."""
 plt.rcParams['font.family'] = 'DejaVu Sans'
 plt.rcParams['font.sans-serif'] = ['DejaVu Sans']
 plt.rcParams['font.size'] = 14
 
 class Menu(Screen):
+    """Menu screen class for displaying game stats and starting the game."""
     def __init__(self, **kwargs):
+        """Initialize the menu screen with chart types."""
         super().__init__(**kwargs)
         self.chart_types = [
             {'name': 'Time Survived', 'data_key': 1, 'ylabel': 'Time (seconds)', 'chart_type': 'bar'},
@@ -37,27 +39,31 @@ class Menu(Screen):
             {'name': 'Movements vs Obstacles', 'data_keys': [8, 9], 'ylabel': 'Count', 'chart_type': 'grouped_overlapping'},
         ]
         self.current_chart_index = 0
-        self.current_canvas = None  # Speichert das aktuelle Canvas-Widget
+        self.current_canvas = None  # Stores the current canvas widget
 
     def on_enter(self):
+        """Called when the menu screen is displayed."""
         self.load_stats()
         
     def start_game(self):
+        """Switch to the game screen."""
         self.manager.current = 'game'
 
     def switch_chart(self, direction):
+        """Switch to the next or previous chart type."""
         self.current_chart_index = (self.current_chart_index + direction) % len(self.chart_types)
         logger.debug(f"Switched to chart index: {self.current_chart_index}")
         self.load_stats()
 
     def load_stats(self):
+        """Load and display game statistics from CSV."""
         logger.debug("load_stats")
         try:
             with open("data/game_data.csv", "r", newline="") as file:
                 reader = csv.reader(file)
                 stats = list(reader)
                 if stats:
-                    # Last round
+                    # Get the last entry for stats
                     last_entry = stats[-1]
                     try:
                         time_survived = float(last_entry[1].strip()) if last_entry[1] and last_entry[1].strip() else 0.0
@@ -77,13 +83,12 @@ class Menu(Screen):
                     self.ids.stats_label.text = stats_text
                     logger.debug(f"loaded stats: {stats_text}")
 
-                    # get entries for the current chart type
-                    
+                    # Prepare data for the current chart type
                     current_chart = self.chart_types[self.current_chart_index]
                     if current_chart['chart_type'] == 'grouped_overlapping':
-                        data_keys = current_chart['data_keys']  # [8, 9] für obstacles und movements
+                        data_keys = current_chart['data_keys']  # [8, 9] for obstacles and movements
                         data = {}
-                        matching_entries = [last_entry]  # Nur aktuelle Runde
+                        matching_entries = [last_entry]  # Only current round
                         for entry in matching_entries:
                             obstacles = json.loads(entry[data_keys[0]].replace("'", '"'))  # Parse obstacles
                             movements = json.loads(entry[data_keys[1]].replace("'", '"'))  # Parse movements
@@ -97,7 +102,6 @@ class Menu(Screen):
                             matching_entries = matching_entries[:5]
                         for entry in reversed(matching_entries):
                             try:
-                                #value = float(entry[data_key].strip()) if entry[data_key] and entry[data_key].strip() else 0.0
                                 value = entry[data_key].strip() if entry[data_key] and entry[data_key].strip() else ""
                                 if current_chart['chart_type'] == 'bar':
                                     value = float(value) if value else 0.0
@@ -116,13 +120,14 @@ class Menu(Screen):
             logger.error(f"Error while loading statistics: {str(e)}")
 
     def create_chart(self, data, title, ylabel, difficulty_classification, chart_type):
+        """Create and display a Matplotlib chart for game statistics."""
         logger.debug(f"Data for chart: {data}")
 
-        # Schließe die alte Figur, falls vorhanden
+        # Close the old figure if it exists
         if plt.fignum_exists(plt.gcf().number):
             plt.close()
 
-        # create Diagram
+        # Create a new figure and axis for the chart
         fig = plt.figure(figsize=(6, 3))
         ax = fig.add_subplot(1, 1, 1)
 
@@ -142,8 +147,8 @@ class Menu(Screen):
             ax.set_xlabel('Death Causes')
 
         elif chart_type == 'grouped_overlapping':
-               x = [0, 0.2, 1, 1.2]  # Positionen: Single Jump, low blocks, Double Jumps, high blocks
-               width = 0.15  # Reduzierte Breite für Überlappung
+               x = [0, 0.2, 1, 1.2]  # Positions: Single Jump, low blocks, Double Jumps, high blocks
+               width = 0.15  # Reduced width for overlapping
                single_jumps = data['movements'].get('single_jump', 0)
                low_blocks = data['obstacles'].get('low_block', 0)
                double_jumps = data['movements'].get('double_jump', 0)
@@ -152,7 +157,7 @@ class Menu(Screen):
                ax.bar(x[1], low_blocks, width, color='red', label='Low Blocks')
                ax.bar(x[2], double_jumps, width, color='green', label='Double Jumps')
                ax.bar(x[3], high_blocks, width, color='orange', label='High Blocks')
-               ax.set_xticks([0.1, 1.1])  # Mittlere Position der Gruppen
+               ax.set_xticks([0.1, 1.1])  # Center positions of groups
                ax.set_xticklabels(['Single Jump', 'Double Jumps'])
                ax.legend()
 
@@ -163,6 +168,7 @@ class Menu(Screen):
         fig.tight_layout()
 
         def add_canvas(dt):
+            """Add the Matplotlib canvas to the Kivy layout."""
             try:
                 if self.current_canvas:
                     self.ids.chart_placeholder.remove_widget(self.current_canvas)
