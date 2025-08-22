@@ -7,6 +7,7 @@ from kivy.uix.widget import Widget
 from kivy.clock import Clock
 import logging
 import csv
+import json
 from kivy_garden.matplotlib.backend_kivyagg import FigureCanvasKivyAgg
 from kivy.graphics import Color, Rectangle
 import matplotlib.pyplot as plt
@@ -33,6 +34,7 @@ class Menu(Screen):
             {'name': 'Time Survived', 'data_key': 1, 'ylabel': 'Time (seconds)', 'chart_type': 'bar'},
             {'name': 'Obstacles Mastered', 'data_key': 7, 'ylabel': 'Count', 'chart_type': 'bar'},
             {'name': 'Death Causes', 'data_key': 10, 'ylabel': 'Frequency', 'chart_type': 'hist'},
+            {'name': 'Movements vs Obstacles', 'data_keys': [8, 9], 'ylabel': 'Count', 'chart_type': 'grouped_overlapping'},
         ]
         self.current_chart_index = 0
         self.current_canvas = None  # Speichert das aktuelle Canvas-Widget
@@ -76,22 +78,33 @@ class Menu(Screen):
                     logger.debug(f"loaded stats: {stats_text}")
 
                     # get entries for the current chart type
+                    
                     current_chart = self.chart_types[self.current_chart_index]
-                    data_key = current_chart['data_key']
-                    data = []
-                    matching_entries = [entry for entry in reversed(stats) if entry[11] == classification]
-                    if current_chart['chart_type'] == 'bar':
-                        matching_entries = matching_entries[:5]
-                    for entry in reversed(matching_entries):
-                        try:
-                            #value = float(entry[data_key].strip()) if entry[data_key] and entry[data_key].strip() else 0.0
-                            value = entry[data_key].strip() if entry[data_key] and entry[data_key].strip() else ""
-                            if current_chart['chart_type'] == 'bar':
-                                   value = float(value) if value else 0.0
-                            data.append(value)
-                        except ValueError:
-                            data.append(0.0 if current_chart['chart_type'] == 'bar' else "")
-                            logger.error(f"invalid entry in csv for data_key {data_key}: {entry[data_key]}")
+                    if current_chart['chart_type'] == 'grouped_overlapping':
+                        data_keys = current_chart['data_keys']  # [8, 9] für obstacles und movements
+                        data = {}
+                        matching_entries = [last_entry]  # Nur aktuelle Runde
+                        for entry in matching_entries:
+                            obstacles = json.loads(entry[data_keys[0]].replace("'", '"'))  # Parse obstacles
+                            movements = json.loads(entry[data_keys[1]].replace("'", '"'))  # Parse movements
+                            data['obstacles'] = {item['name']: item['count'] for item in obstacles}
+                            data['movements'] = {item['name']: item['count'] for item in movements}
+                    else:    
+                        data_key = current_chart['data_key']
+                        data = []
+                        matching_entries = [entry for entry in reversed(stats) if entry[11] == classification]
+                        if current_chart['chart_type'] == 'bar':
+                            matching_entries = matching_entries[:5]
+                        for entry in reversed(matching_entries):
+                            try:
+                                #value = float(entry[data_key].strip()) if entry[data_key] and entry[data_key].strip() else 0.0
+                                value = entry[data_key].strip() if entry[data_key] and entry[data_key].strip() else ""
+                                if current_chart['chart_type'] == 'bar':
+                                    value = float(value) if value else 0.0
+                                data.append(value)
+                            except ValueError:
+                                data.append(0.0 if current_chart['chart_type'] == 'bar' else "")
+                                logger.error(f"invalid entry in csv for data_key {data_key}: {entry[data_key]}")
 
                     self.create_chart(data, current_chart['name'], current_chart['ylabel'], classification, current_chart['chart_type'])
                 else:
@@ -127,6 +140,21 @@ class Menu(Screen):
             logger.warning(f"Unique causes: {unique_causes}, Counts: {counts}")
             ax.bar(unique_causes, counts, color=['red', 'green', 'blue', 'orange', 'purple'][:len(unique_causes)])
             ax.set_xlabel('Death Causes')
+
+        elif chart_type == 'grouped_overlapping':
+               x = [0, 0.2, 1, 1.2]  # Positionen: Single Jump, low blocks, Double Jumps, high blocks
+               width = 0.15  # Reduzierte Breite für Überlappung
+               single_jumps = data['movements'].get('single_jump', 0)
+               low_blocks = data['obstacles'].get('low_block', 0)
+               double_jumps = data['movements'].get('double_jump', 0)
+               high_blocks = data['obstacles'].get('high_block', 0)
+               ax.bar(x[0], single_jumps, width, color='blue', label='Single Jumps')
+               ax.bar(x[1], low_blocks, width, color='red', label='Low Blocks')
+               ax.bar(x[2], double_jumps, width, color='green', label='Double Jumps')
+               ax.bar(x[3], high_blocks, width, color='orange', label='High Blocks')
+               ax.set_xticks([0.1, 1.1])  # Mittlere Position der Gruppen
+               ax.set_xticklabels(['Single Jump', 'Double Jumps'])
+               ax.legend()
 
         ax.set_ylabel(ylabel)
         ax.set_title(title)
